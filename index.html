@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Rithik Assignment 4</title>
+
+    <script src="https://d3js.org/d3.v6.min.js"></script>
+
+    <style>
+        #updatedTime {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            font-family: sans-serif;
+            font-size: 12pt;
+        }
+
+        .legendText {
+            font-family: sans-serif;
+            font-size: 5pt;
+        }
+    </style>
+
+</head>
+
+<body>
+    <h1>Rithik Assignment 4</h1>
+    <svg width="80vw" viewBox="0 0 600 600"></svg>
+
+    <div id='updatedTime'>
+    </div>
+
+    <script>
+        const dataFileName = 'Data_CT.csv';
+        let svgContainer = d3.select("svg");
+
+        const geoPath = d3.geoPath();
+
+        function plotContour(fileName) {
+            d3.csv(fileName).then(function (data) {
+                let rows = 512, cols = 512;
+
+                let values = [];
+                data.forEach(function (d) {
+                    values.push(+d[0]);
+                });
+
+                const minValue = d3.min(values);
+                const maxValue = d3.max(values);
+
+                let colorScale = d3.scaleLinear()
+                    .domain(d3.range(minValue, maxValue,
+                        parseInt(Math.abs(maxValue - minValue) / 7)))
+                    .range(["#0d1a50", "#3e5eba", "#2b83ba",
+                        "#abdda4", "#ffffbf", "#fdae61", "#d7191c"])
+                    .interpolate(d3.interpolateHcl);
+
+                let contours = d3.contours()
+                    .size([rows, cols])
+                    .thresholds(d3.range(minValue, maxValue, 300))
+                    (values);
+
+                svgContainer.append("g").attr("class", "contours")
+                    .selectAll("path")
+                    .data(contours)
+                    .enter()
+                    .append("path")
+                    .attr("d", function (d) { return geoPath(d); })
+                    .attr("stroke", "black")
+                    .attr("stroke-width", ".1px")
+                    .attr("stroke-linejoin", "round")
+                    .attr("fill", function (d) { return colorScale(d.value); });
+            });
+        }
+
+        plotContour(dataFileName);
+    </script>
+</body>
+
+</html>
